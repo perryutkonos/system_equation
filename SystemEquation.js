@@ -1,15 +1,10 @@
-Number.prototype.toFixed = function (countDigits = 10) {
-
-    return Math.round(this * Math.pow(10, countDigits)) / Math.pow(10, countDigits);
-};
-
 class SystemEquation {
 
     constructor(data) {
 
         this.matrix = data.matrix;
         this.freeElems = data.freeElems;
-        this.accuracy = data.accuracy;
+        this.eps = data.eps;
         this.size = data.matrix.length;
         this.countDigits = data.countDigits;
     }
@@ -22,7 +17,7 @@ class SystemEquation {
 
             let colSum = 0;
             for (let i = 0; i < this.size; i++) {
-                colSum = (colSum + this.matrix[i][j]).toFixed();
+                colSum += this.matrix[i][j];
             }
 
             if (j === 0 || colSum > result) {
@@ -33,7 +28,7 @@ class SystemEquation {
         return result;
     }
 
-    getNormalTwo () {
+    getNormalTwo() {
 
         let result = 0;
 
@@ -41,7 +36,7 @@ class SystemEquation {
 
             let rowSum = 0;
             for (let j = 0; j < this.size; j++) {
-                rowSum = (rowSum + this.matrix[i][j]).toFixed();
+                rowSum += this.matrix[i][j];
             }
 
             if (i === 0 || rowSum > result) {
@@ -52,25 +47,41 @@ class SystemEquation {
         return result;
     }
 
-    getNormalThree ()  {
+    getNormalThree() {
 
         let result = 0;
 
         for (let i = 0; i < this.size; i++) {
-
             for (let j = 0; j < this.size; j++) {
-                result = (result + (this.matrix[i][j] * this.matrix[i][j]).toFixed()).toFixed();
+
+                result += this.matrix[i][j] * this.matrix[i][j];
             }
 
         }
-
-        result = Math.sqrt(result).toFixed()
+        result = Math.sqrt(result);
         return result;
     }
 
     checkNormals() {
 
         return this.getNormalOne() < 1 || this.getNormalTwo() < 1 || this.getNormalThree() < 1;
+    }
+
+    checkResult(vector) {
+
+        for (let i = 0; i < this.size; i++) {
+
+            let result = 0;
+            for (let j = 0; j < this.size; j++) {
+
+                result += this.matrix[i][j] * vector[j];
+            }
+
+            result -= vector[i];
+            let error = Math.abs(result + this.freeElems[i]).toFixed();
+
+            console.log(`Результат: ${result} | Ожидание: ${-1 * this.freeElems[i]} | Разница: ${error}`)
+        }
     }
 
     getEmptyVector() {
@@ -87,7 +98,7 @@ class SystemEquation {
         let result = 0;
         for (let i = 0; i < this.size; i++) {
 
-            let newDiff = Math.abs((newVector[i] - oldVector[i]).toFixed());
+            let newDiff = Math.abs(newVector[i] - oldVector[i]);
 
             if (i === 0 || newDiff > result) {
                 result = newDiff;
@@ -95,7 +106,6 @@ class SystemEquation {
         }
 
         return result;
-
     }
 
     getResultByYakobi() {
@@ -106,11 +116,12 @@ class SystemEquation {
 
             for (let i = 0; i < this.size; i++) {
 
-                result[i] = this.freeElems[i].toFixed();
+                result[i] = this.freeElems[i];
 
                 for (let j = 0; j < this.size; j++) {
 
-                    result[i] = (result[i] + (this.matrix[i][j] * oldVector[j]).toFixed()).toFixed();
+                    result[i] += this.matrix[i][j] * oldVector[j];
+                    result[i] = result[i].toFixed();
                 }
             }
 
@@ -120,17 +131,23 @@ class SystemEquation {
 
         if (this.checkNormals()) {
 
-            let vector = this.getEmptyVector(this.size);
-            let diff = this.accuracy;
+            console.log(`\nРешение системы методом Якоби:`);
 
-            while (diff >= this.accuracy) {
+            let vector = this.getEmptyVector(this.size);
+            let diff = 1;
+
+            let step = 1;
+
+            for (; diff > this.eps; step++) {
 
                 let newVector = getNewVector(vector);
                 diff = this.getVectorDiff(vector, newVector);
 
                 vector = newVector;
+                console.log(`Шаг ${step}`, vector);
             }
 
+            console.log(`Результат получен на шаге ${step - 1}:`, vector);
             return vector;
 
         } else {
@@ -144,29 +161,34 @@ class SystemEquation {
 
         if (this.checkNormals()) {
 
-            let vector = this.getEmptyVector(this.size);
-            let diff = this.accuracy;
+            console.log(`\nРешение системы методом Зейделя:`);
 
-            while (diff >= this.accuracy) {
+            let vector = this.getEmptyVector(this.size);
+            let diff = 1;
+
+            let step = 1;
+            for (; diff > this.eps; step++) {
 
                 for (let i = 0; i < this.size; i++) {
 
-                    let newValue = this.freeElems[i].toFixed();
+                    let newValue = this.freeElems[i];
 
                     for (let j = 0; j < this.size; j++) {
-
-                        newValue = (newValue + (this.matrix[i][j] * vector[j]).toFixed()).toFixed();
+                        newValue += this.matrix[i][j] * vector[j];
                     }
 
-                    let newDiff = Math.abs((vector[i] - newValue).toFixed());
+                    let newDiff = Math.abs(vector[i] - newValue);
 
                     if (i === 0 || newDiff > diff) {
                         diff = newDiff;
                     }
 
-                    vector[i] = newValue;
+                    vector[i] = newValue.toFixed();
                 }
+
+                console.log(`Шаг ${step}`, vector);
             }
+            console.log(`Результат получен на шаге ${step -1}:`, vector);
 
             return vector;
 

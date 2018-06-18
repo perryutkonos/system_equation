@@ -1,11 +1,17 @@
+Number.prototype.toFixed = function (countDigits = 5) {
+    return Math.round(this * Math.pow(10, countDigits)) / Math.pow(10, countDigits);
+};
+
 const data = require("./data");
 const SystemEquation = require("./SystemEquation");
 
 const systemEquation = new SystemEquation(data);
 
-systemEquation.checkNormals();
 const resultYakobi = systemEquation.getResultByYakobi();
-const resultZeudel = systemEquation.getResultByZeydel();
+const resultZeydel = systemEquation.getResultByZeydel();
 
-console.log(resultYakobi);
-console.log(resultZeudel);
+console.log("\nПогрешность Якоби");
+systemEquation.checkResult(resultYakobi);
+
+console.log("\nПогрешность Зейделя");
+systemEquation.checkResult(resultZeydel);

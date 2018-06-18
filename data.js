@@ -9,7 +9,5 @@ module.exports = {
 
     freeElems: [-1.33,0.84,-1.16,0.57],
 
-    accuracy: 0.00001,
-
-    countDigits: 10
+    eps: 0.00001
 }
